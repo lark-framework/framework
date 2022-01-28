@@ -556,7 +556,8 @@ $user = (new \App\Model\User)->make([
 	'name' => 'Bob',
 	'age' => 25
 ]);
-var_dump($user); // array(3) { ["name"]=> string(3) "Bob" ["age"]=> int(25) ["isAdmin"]=> bool(false) }
+var_dump($user); 
+// array(3) { ["name"]=> string(3) "Bob" ["age"]=> int(25) ["isAdmin"]=> bool(false) }
 
 // or an array can be used
 $user = (new \App\Model\User)->makeArray([
