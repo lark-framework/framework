@@ -77,7 +77,8 @@ class Route
 		{
 			App::debug(__METHOD__, [
 				'action' => '[fn]',
-				'isMiddleware' => $isMiddleware
+				'isMiddleware' => $isMiddleware,
+				'params' => $params
 			]);
 
 			call_user_func_array($action, $params);
@@ -92,7 +93,8 @@ class Route
 
 			App::debug(__METHOD__, [
 				'action' => $action,
-				'isMiddleware' => $isMiddleware
+				'isMiddleware' => $isMiddleware,
+				'params' => $params
 			]);
 
 			call_user_func_array([new $action[0], $action[1]], $params);
@@ -102,7 +104,8 @@ class Route
 			$type = gettype($action);
 			throw new RouterException('Invalid Route action type', [
 				'type' => $type,
-				'isMiddleware' => $isMiddleware
+				'isMiddleware' => $isMiddleware,
+				'params' => $params
 			]);
 		}
 	}

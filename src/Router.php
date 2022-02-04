@@ -139,7 +139,10 @@ class Router extends \Lark\Factory\Singleton
 				|| (is_array($action) && isset($action[0]) && is_string($action[0]))
 			)
 			{
-				Route::action($action, true);
+				Route::action($action, true, [
+					App::getInstance()->request(),
+					App::getInstance()->response()
+				]);
 				continue;
 			}
 

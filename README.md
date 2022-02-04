@@ -1,12 +1,13 @@
 # Lark Framework
 
-Lark is an app framework for PHP (7.4, 8)
+Lark is a modern, lightweight app framework designed specifically for developing REST APIs.
 
+- [Installation](#installation)
 - [Routing](#routing)
-	- [Routes](#routes)
-	- [Route Parameters](#route-parameters)
-	- [Route Actions](#route-actions)
-	- [Middleware](#middleware)
+  - [Routes](#routes)
+  - [Route Parameters](#route-parameters)
+  - [Route Actions](#route-actions)
+  - [Middleware](#middleware)
 - [Logging](#logging)
 - [Exception Handling](#exception-handling)
 - [Configuration](#configuration)
@@ -17,8 +18,20 @@ Lark is an app framework for PHP (7.4, 8)
 - [Model](#model)
 - [Store](#store)
 - [Validator](#validator)
-	- [Validation Types & Rules](#validation-types--rules)
+  - [Validation Types & Rules](#validation-types--rules)
 - [Filter](#filter)
+- [HTTP Client](#http-client)
+
+## Installation
+
+Requirements:
+
+- PHP 7.4, 8
+- PHP extensions
+  - Required
+	- [...]
+  - Optional
+	- [curl](https://www.php.net/manual/en/book.curl.php) - if using `Lark\Http\Client`
 
 ## Routing
 
@@ -79,7 +92,7 @@ router()
 
 #### Route Group Loading
 
-Route groups can be defined in files which are loaded during routing (lazy load routes).
+Route groups can be defined in *route files* which are loaded during routing (lazy load routes).
 
 ```php
 // bootstrap routes directory
@@ -95,6 +108,18 @@ router()->load([
 router()
 	->get('/', function(){}) // "/api/users"
 	->get('/active', function(){}); // "/api/users/active"
+```
+
+Inside route files `router()` should only be called once to avoid false route no match errors.
+
+```php
+// incorrect:
+router()->bind(function(){});
+router()->get('/', function(){});
+// correct:
+router()
+	->bind(function(){})
+	->get('/', function(){});
 ```
 
 ### Route Actions
@@ -150,13 +175,13 @@ router()->get('/users/(\d+)', function($id){});
 
 ### Middleware
 
-Middleware is a single or multiple actions that are executed before a route action is called. Middleware actions can be executed always or only when a route is matched. Middleware must be defined _before_ routes are defined. Middleware actions follow the same structure as [Route Actions](#route-actions).
+Middleware is a single or multiple actions that are executed before a route action is called. Middleware actions can be executed always or only when a route is matched. Middleware must be defined _before_ routes are defined. Middleware actions follow the same structure as [Route Actions](#route-actions). The parameters `Lark\Request $req` and `Lark\Response $res` are passed to all middleware actions.
 
 ```php
 // executed always
-router()->bind(function(){});
+router()->bind(function(\Lark\Request $req, \Lark\Response $res){});
 // executed if any route is matched
-router()->matched(function(){});
+router()->matched(function(\Lark\Request $req, \Lark\Response $res){});
 
 // define routes
 // ...
@@ -291,7 +316,7 @@ class ExceptionHandler
 
 			// respond with error
 			app()->response()
-				->status($code)
+				->code($code)
 				->json($info);
 
 			// --or-- continue to throw exception
@@ -302,10 +327,13 @@ class ExceptionHandler
 ```
 
 ## Configuration
+
 Framework configuration settings and bindings can be set using the `bind()` method.
 
 ### Store Connections
-Store connections are registered using the sytnax `store.[type].[connection].[database].[collection]`.
+
+Store connections are registered using the syntax `store.[type].[connection].[database].[collection]`.
+
 ```php
 // the first connection for each store types is always the default
 app()->bind('store.db.connection.myConn', [ /* hosts, username, etc. */ ]);
@@ -319,7 +347,9 @@ $db2 = store('db.myConn2.dbName.collectionName');
 ```
 
 ### Store Global Options
+
 Store global options can be set using `store.[type].options`.
+
 ```php
 app()->bind('db.db.options', [
 	// enable debug logging (default: false)
@@ -330,7 +360,9 @@ app()->bind('db.db.options', [
 ```
 
 ### Validator Custom Rules
+
 Custom validator rules can be registered using `validator.rule.[type].[ruleClassName]`.
+
 ```php
 app()->bind('validator.rule.string.beginWithEndWith', \App\Validator\BeginWithEndWith::class);
 ```
@@ -405,6 +437,7 @@ print_r([
 	'name' => app()->request()->query('name', 'default')->string()
 ]); // Array ( [id] => 5 [name] => Shay )
 ```
+
 > Filter options and [flags](https://www.php.net/manual/en/filter.filters.flags.php) can be used with filter methods: `app()->request()->input('name')->string(['flags' => FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK])`
 
 Request cookie example.
@@ -480,7 +513,7 @@ Session methods `clear()`, `get()`, `has()` and `set()` all use dot notation for
 
 - `clear(string $key)` - clear a key
 - `static cookieOptions(array $options)` - set cookie options
-	- default options are: `['lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => false, 'httponly' => false]`
+  - default options are: `['lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => false, 'httponly' => false]`
 - `destroy()` - destroy a session
 - `get(string $key)` - value getter
 - `has(string $key): bool` - check if key exists
@@ -496,7 +529,7 @@ Session methods `clear()`, `get()`, `has()` and `set()` all use dot notation for
 // set header, status code 200, content-type and send JSON response
 app()->response()
 	->header('X-Test', 'value')
-	->status(\Lark\Response::HTTP_OK)
+	->code(\Lark\Response::HTTP_OK)
 	->contentType('application/json') // not required when using json()
 	->json(['ok' => true]);
 // {"ok": true}
@@ -514,7 +547,7 @@ app()->response()
 - `json($data)` - respond with JSON payload (and content-type `application/json` in headers)
 - `redirect(string $location, bool $statusCode301 = false)` - send redirect
 - `send($data)` - respond with raw data payload
-- `status(int $code): Lark\Response` - response status code setter
+- `code(int $code): Lark\Response` - response status code setter
 
 ## Share
 
@@ -556,7 +589,7 @@ $user = (new \App\Model\User)->make([
 	'name' => 'Bob',
 	'age' => 25
 ]);
-var_dump($user); 
+var_dump($user);
 // array(3) { ["name"]=> string(3) "Bob" ["age"]=> int(25) ["isAdmin"]=> bool(false) }
 
 // or an array can be used
@@ -567,6 +600,7 @@ $user = (new \App\Model\User)->makeArray([
 ```
 
 The `ENTITY_FLAG_PARTIAL` flag can be set to allow missing fields that can be used for partial updates.
+
 ```php
 $user = (new \App\Model\User)->make([
 	'name' => 'Bob'
@@ -575,6 +609,7 @@ var_dump($user); // array(1) { ["name"]=> string(3) "Bob" }
 ```
 
 The `ENTITY_FLAG_ID` flag can be set to require any field using the `id` rule.
+
 ```php
 // schema: ['id' => ['string', 'id'], 'name' => ['string', notEmpty]]
 $user = (new \App\Model\User)->make([
@@ -583,10 +618,13 @@ $user = (new \App\Model\User)->make([
 // throws Lark\Validator\ValidatorException:
 // Validation failed: "id" must be a string
 ```
+
 > Multiple entity flags can be set like: `ENTITY_FLAG_ID | ENTITY_FLAG_PARTIAL`
 
 ## Store
+
 `Lark\Store` is a store and database helper.
+
 ```php
 // bootstrap
 // setup default MongoDB connection
@@ -627,12 +665,16 @@ $affected = $db->update(['name' => 'test'], ['name' => 'TEST']); // 1
 // delete documents
 $affected = $db->delete(['name' => 'TEST']); // 1
 ```
+
 ### Store Types
+
 - `db` - MongoDB
 - `es` - Elasticsearch (coming soon)
+- `json` - JSON file (coming soon)
 - `sql` - MySQL / MariaDB (future development)
 
 ### Store Methods
+
 - `count(array $filter = [], array $options = []): int` - count documents matching filter
 - `delete(array $filter, array $options = []): int` - delete documents matching filter
 - `deleteAll(array $options = []): int` - delete all documents
@@ -656,7 +698,6 @@ $affected = $db->delete(['name' => 'TEST']); // 1
 - `updateBulk(array $documents, array $options = []): int` - bulk update
 - `updateId($id, $update, array $options = []): int` - update document by ID
 - `updateOne(array $filter, $update, array $options = []): int` - update single document matching filter
-
 
 ## Validator
 
@@ -690,69 +731,69 @@ app()->validator([
 
 ### Validation Types & Rules
 
-Rules `notNull` and `notEmpty`, and sometimes `id`, are rules for all types that do not allow the value to be `null`. 
+Rules `notNull` and `notEmpty`, and sometimes `id`, are rules for all types that do not allow the value to be `null`.
 The rule `voidable` can be used for any fields that can be missing.
 
 - `generic` (no type, default) - any type allowed
-	- `notNull` - value cannot be `null`
+  - `notNull` - value cannot be `null`
 - `array` (or `arr`) - value can be `array` or `null`
-	- `allowed` - array values must be allowed `[allowed => [...]]`
-	- `length` - number of array items must be `[length => x]`
-	- `max` - array values cannot exceed maximum value of `[max => x]`
-	- `min` - array values cannot be lower than minimum value of `[min => x]`
-	- `notEmpty` - must be a non-empty `array`
-	- `notNull` - must be an `array`
-	- `unique` - array values must be unique
+  - `allowed` - array values must be allowed `[allowed => [...]]`
+  - `length` - number of array items must be `[length => x]`
+  - `max` - array values cannot exceed maximum value of `[max => x]`
+  - `min` - array values cannot be lower than minimum value of `[min => x]`
+  - `notEmpty` - must be a non-empty `array`
+  - `notNull` - must be an `array`
+  - `unique` - array values must be unique
 - `boolean` (or `bool`) - must be `boolean` or `null`
-	- `notNull` - must be `boolean`
+  - `notNull` - must be `boolean`
 - `float` - must be a `float` or `null`
-	- `between` - must be between both values `[between => [x, y]]`
-	- `max` - must be a maximum value of `[max => x]`
-	- `min` - must be a minimum value of `[min => x]`
-	- `notEmpty` - must be a non-zero `float`
-	- `notNull` - must be a `float`
+  - `between` - must be between both values `[between => [x, y]]`
+  - `max` - must be a maximum value of `[max => x]`
+  - `min` - must be a minimum value of `[min => x]`
+  - `notEmpty` - must be a non-zero `float`
+  - `notNull` - must be a `float`
 - `integer` (or `int`) - must be an `integer` or `null`
-	- `between` - must be between both values `[between => [x, y]]`
-	- `id` - must be an `integer` when `ENTITY_FLAG_ID` flag is set
-	- `max` - must be a maximum value of `[max => x]`
-	- `min` - must be a minimum value of `[min => x]`
-	- `notEmpty` - must be a non-zero `integer`
-	- `notNull` - must be an `integer`
+  - `between` - must be between both values `[between => [x, y]]`
+  - `id` - must be an `integer` when `ENTITY_FLAG_ID` flag is set
+  - `max` - must be a maximum value of `[max => x]`
+  - `min` - must be a minimum value of `[min => x]`
+  - `notEmpty` - must be a non-zero `integer`
+  - `notNull` - must be an `integer`
 - `number` (or `num`) - must be a number or `null`
-	- `between` - must be between both values `[between => [x, y]]`
-	- `id` - must be a number when `ENTITY_FLAG_ID` flag is set
-	- `max` - must be a maximum value of `[max => x]`
-	- `min` - must be a minimum value of `[min => x]`
-	- `notEmpty` - must be a non-zero number
-	- `notNull` - must be a number
+  - `between` - must be between both values `[between => [x, y]]`
+  - `id` - must be a number when `ENTITY_FLAG_ID` flag is set
+  - `max` - must be a maximum value of `[max => x]`
+  - `min` - must be a minimum value of `[min => x]`
+  - `notEmpty` - must be a non-zero number
+  - `notNull` - must be a number
 - `object` (or `obj`) - must be an `object` or `null`
-	- `notEmpty` - must be a non-empty `object`
-	- `notNull` - must be an `object`
+  - `notEmpty` - must be a non-empty `object`
+  - `notNull` - must be an `object`
 - `string` (or `str`) - must be a `string` or `null`
-	- `allowed` - value must be allowed `[allowed => [...]]`
-	- `alnum` - must only contain alphanumeric characters
-		- or, must only contain alphanumeric characters and whitespaces `[alnum => true]`
-	- `alpha` - must only contain alphabetic characters
-		- or, must only contain alphabetic characters and whitespaces `[alpha => true]`
-	- `contains` - must contain value `[contains => x]`
-		- or, must contain value (case-insensitive) `[contains => [x, true]]`
-	- `email` - must be a valid email address
-	- `hash` - hashes must be equal (timing attack safe) `[hash => x]`
-	- `id` - must be an `string` when `ENTITY_FLAG_ID` flag is set
-	- `ipv4` - must be valid IPv4 address
-	- `ipv6` - must be valid IPv6 address
-	- `json` - must be a valid JSON
-	- `length` - length must be number of characters `[length => x]`
-	- `match` - value must be a regular expression match `[match => x]`
-	- `max` - length must be a maximum number of characters `[max => x]`
-	- `min` - length must be a minimum number of characters `[min => x]`
-	- `notAllowed` - value must be allowed `[notAllowed => [...]]`
-	- `notEmpty` - must be a non-empty `string`
-	- `notNull` - must be a `string`
-	- `password` - passwords must match `[password => x]`
-	- `url` - must be a valid URL
+  - `allowed` - value must be allowed `[allowed => [...]]`
+  - `alnum` - must only contain alphanumeric characters
+	- or, must only contain alphanumeric characters and whitespaces `[alnum => true]`
+  - `alpha` - must only contain alphabetic characters
+	- or, must only contain alphabetic characters and whitespaces `[alpha => true]`
+  - `contains` - must contain value `[contains => x]`
+	- or, must contain value (case-insensitive) `[contains => [x, true]]`
+  - `email` - must be a valid email address
+  - `hash` - hashes must be equal (timing attack safe) `[hash => x]`
+  - `id` - must be an `string` when `ENTITY_FLAG_ID` flag is set
+  - `ipv4` - must be valid IPv4 address
+  - `ipv6` - must be valid IPv6 address
+  - `json` - must be a valid JSON
+  - `length` - length must be number of characters `[length => x]`
+  - `match` - value must be a regular expression match `[match => x]`
+  - `max` - length must be a maximum number of characters `[max => x]`
+  - `min` - length must be a minimum number of characters `[min => x]`
+  - `notAllowed` - value must be allowed `[notAllowed => [...]]`
+  - `notEmpty` - must be a non-empty `string`
+  - `notNull` - must be a `string`
+  - `password` - passwords must match `[password => x]`
+  - `url` - must be a valid URL
 - `timestamp` - must be a timestamp or `null`
-	- `required` - must be a timestamp
+  - `required` - must be a timestamp
 
 ### Nested Fields
 
@@ -875,11 +916,15 @@ app()->validator([
 ```
 
 ## Filter
+
 `Lark\Filter` is a filter helper.
+
 ```php
 $cleanStr = filter()->string($str);
 ```
+
 Filter by array keys.
+
 ```php
 $arr = ["one" => 1, "two" => 2, "three" => 3];
 
@@ -895,9 +940,90 @@ print_r(
 ```
 
 ### Filter Methods
+
 - `email($value, array $options = []): string` - sanitize value with email filter
 - `float($value, array $options = ['flags' => FILTER_FLAG_ALLOW_FRACTION]): float` - sanitize value with float filter
 - `integer($value, array $options = []): int` - sanitize value with integer filter
 - `keys(array $array, array $filter): array` - filters keys based on include or exclude filter
 - `string($value, array $options = ['flags' => FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH]): string` - sanitize value with string filter
 - `url($value, array $options = []): string` - sanitize value with url filter
+
+
+
+## HTTP Client
+
+`Lark\Http\Client` is a HTTP client helper.
+
+```php
+use Lark\Http\Client;
+$client = new Client;
+try
+{
+	$res = $client->get('http://example.com');
+	$headers = $client->getHeaders();
+	$statusCode = $client->getStatusCode();
+}
+catch (\Lark\Http\HttpException $ex)
+{
+	// handle request/curl error
+}
+```
+
+Various HTTP methods are available.
+
+```php
+// DELETE request
+$client->delete('http://example.com', ['field1' => 'value']);
+// GET request
+$client->get('http://example.com', ['param' => 1]); // http://example.com?param=1
+// HEAD request
+$client->head('http://example.com');
+// OPTIONS request
+$client->options('http://example.com');
+// PATCH request
+$client->patch('http://example.com', ['field1' => 'value']);
+// POST request
+$client->post('http://example.com', ['field1' => 'value']);
+// PUT request
+$client->put('http://example.com', ['field1' => 'value']);
+```
+
+Options can be set for all methods (will override default options).
+
+```php
+use Lark\Http\Client;
+$client = new Client(['url' => 'http://example.com', 'timeout' => 8]);
+$res = $client->get('/api/items'); // http://example.com/api/items
+$res2 = $client->post('/api/items', ['name' => 'My Item']);
+```
+
+Options can be set for individual methods (will override default options and options for all methods).
+
+```php
+$res = $client->get('/api/items', ['timeout' => 5]);
+```
+
+Options for `curl` can be set.
+
+```php
+use Lark\Http\Client;
+$client = new Client([
+	'curl' => [
+		CURLOPT_RESOLVE => ['test.loc:127.0.0.1']
+	]
+]);
+```
+
+### HTTP Client Options
+
+- `curl` - set options for `curl` using `CURLOPT_[...]` options
+- `headers` - set HTTP headers, which can be set using two methods
+	- `['headers' => ['My-Header' => 'value']]`
+	- `['headers' => ['My-Header: value']]`
+- `port` - set a custom port number
+- `proxy` - use an HTTP proxy
+- `redirects` - allow redirects
+- `timeout` - timeout in seconds for connection and exection
+- `url` - base URL for request methods
+- `verify` - verify peer's certificate and common name
+

@@ -75,6 +75,21 @@ class Response extends \Lark\Factory\Singleton
 	}
 
 	/**
+	 * Status code setter
+	 *
+	 * @param int $code
+	 * @return self
+	 */
+	public function code(int $code): self
+	{
+		if (!headers_sent())
+		{
+			http_response_code($code);
+		}
+		return $this;
+	}
+
+	/**
 	 * Content-type setter
 	 *
 	 * @param string $contentType
@@ -235,20 +250,5 @@ class Response extends \Lark\Factory\Singleton
 	{
 		echo $data;
 		exit; #todo replace with App::stop()
-	}
-
-	/**
-	 * Status code setter
-	 *
-	 * @param int $code
-	 * @return self
-	 */
-	public function status(int $code): self
-	{
-		if (!headers_sent())
-		{
-			http_response_code($code);
-		}
-		return $this;
 	}
 }

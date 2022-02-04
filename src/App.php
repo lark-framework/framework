@@ -172,7 +172,7 @@ class App extends \Lark\Factory\Singleton
 	 * @param int $flags
 	 * @return Validator
 	 */
-	public function validator($data, array $schema, int $entityFlags = 0): Validator
+	final public function validator($data, array $schema, int $entityFlags = 0): Validator
 	{
 		return new Validator($data, $schema, $entityFlags);
 	}
