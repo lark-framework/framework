@@ -18,7 +18,7 @@
 		"mongodb/mongodb": "^1.5"
 	},
 	"autoload": {
-		"files": ["./Lark/functions.php"],
+		"files": ["src/Lark/functions.php"],
 		"psr-4": {
 			"Lark\\": "src/Lark/"
 		}
