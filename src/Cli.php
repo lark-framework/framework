@@ -59,21 +59,6 @@ class Cli extends \Lark\Factory\Singleton
 	private array $options = ['.map' => []];
 
 	/**
-	 * Init
-	 *
-	 * @return void
-	 */
-	protected function __init(): void
-	{
-		$this->command('help', 'Display help')
-			->arg("command", "Command name", ["optional"])
-			->action(function ($command = null)
-			{
-				$command ? $this->helpCommand($command) : $this->help();
-			});
-	}
-
-	/**
 	 * Register command
 	 *
 	 * @param string $name

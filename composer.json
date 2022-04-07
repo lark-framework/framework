@@ -1,32 +1,26 @@
 {
-    "name": "lark/lark-framework",
-    "description": "Lark Framework",
-    "keywords": [
-        "lark",
-        "framework"
-    ],
-    "license": "MIT",
-    "homepage": "https://github.com/lark-framework/framework",
-    "support": {
-        "issues": "https://github.com/lark-framework/framework/issues",
-        "source": "https://github.com/lark-framework/framework"
-    },
-    "authors": [
-        {
-            "name": "Shay Anderson",
-            "email": "shaycoder@gmail.com"
-        }
-    ],
-    "require": {},
-    "autoload": {
-        "files": [
-            "./Lark/functions.php",
-            "./MongoDB/functions.php"
-        ],
-        "psr-4": {
-            "App\\": "app/",
-            "Lark\\": "Lark/",
-            "MongoDB\\": "MongoDB/"
-        }
-    }
+	"name": "lark/framework",
+	"description": "Lark Framework",
+	"keywords": ["lark", "framework"],
+	"license": "MIT",
+	"homepage": "https://github.com/lark-framework/framework",
+	"support": {
+		"issues": "https://github.com/lark-framework/framework/issues",
+		"source": "https://github.com/lark-framework/framework"
+	},
+	"authors": [
+		{
+			"name": "Shay Anderson",
+			"email": "shaycoder@gmail.com"
+		}
+	],
+	"require": {
+		"mongodb/mongodb": "^1.5"
+	},
+	"autoload": {
+		"files": ["./Lark/functions.php"],
+		"psr-4": {
+			"Lark\\": "src/Lark/"
+		}
+	}
 }
