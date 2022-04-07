@@ -88,7 +88,7 @@ class Router extends \Lark\Factory\Singleton
 	/**
 	 * Init
 	 */
-	protected function __construct()
+	protected function __init()
 	{
 		$this->requestMethod = Request::getInstance()->method();
 		$this->requestPath = Request::getInstance()->path();
@@ -166,6 +166,7 @@ class Router extends \Lark\Factory\Singleton
 		App::debug(__METHOD__);
 
 		// import routes
+		#todo mv to binding (this as default)
 		require_once PATH_APP . '/routes.php';
 
 		// no match

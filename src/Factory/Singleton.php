@@ -29,8 +29,12 @@ abstract class Singleton
 	/**
 	 * Protected
 	 */
-	protected function __construct()
+	final private function __construct()
 	{
+		if (method_exists($this, '__init'))
+		{
+			$this->__init();
+		}
 	}
 
 	/**

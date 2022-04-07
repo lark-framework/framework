@@ -21,6 +21,7 @@ Lark is a modern, lightweight app framework designed specifically for developing
   - [Validation Types & Rules](#validation-types--rules)
 - [Filter](#filter)
 - [HTTP Client](#http-client)
+- [CLI](#cli)
 
 ## Installation
 
@@ -915,6 +916,8 @@ app()->validator([
 ])->validate(); // true
 ```
 
+
+
 ## Filter
 
 `Lark\Filter` is a filter helper.
@@ -1026,4 +1029,173 @@ $client = new Client([
 - `timeout` - timeout in seconds for connection and exection
 - `url` - base URL for request methods
 - `verify` - verify peer's certificate and common name
+
+
+## CLI
+`Lark\Cli` is a CLI helper.
+```php
+// bootstrap
+// ...
+
+$cli = Lark\Cli::getInstance();
+
+// add command
+$cli->command('files', 'Print files in directory')
+	->arg('dir', 'Read directory')
+	->action(function($dir) {
+		// print files in directory $dir
+	});
+	// or use class/method:
+	// ->action([MyClass::class, 'methodName'])
+
+// run app
+$cli->run($_SERVER['argv']);
+```
+Arguments and options can be set for a command, and each argument and option has optional settings.
+```php
+// set global option (separate from command options)
+$cli->option('-d, --debug', 'Enable debug mode', function() {
+	// enable here
+});
+
+$cli->command('files', 'Print files in directory')
+	->arg('dir', 'Read directory') // required by default
+	// set another optional argument that can have multiple values (array)
+	->arg('subdirs', 'Read subdirectories', ['optional', 'array'])
+	// add option for output file
+	->option('-o, --outputfile', 'Output to file')
+	// add command action
+	->action(function ($dir, array $subdirs, $outputfile) {
+		var_dump($dir, $subdirs, $outputfile);
+	});
+
+// $ php ./app/cli.php files mydir subdir1 subdir2 --outputfile=/my/file
+// string(5) "mydir"
+// array(2) { [0] => string(7) "subdir1" [1] => string(7) "subdir2" }
+// string(8) "/my/file"
+```
+The CLI `Output` class is an output and style helper.
+```php
+$o = $cli->output();
+
+// output green text
+$o->colorGreen->echo('This is green text');
+// use multiple styles
+$o->colorBlue->styleUnderline->echo('More text');
+
+// style helper methods for common styles
+$o->error('Error'); // red background
+$o->info('Info'); // blue text
+$o->ok('Success'); // green text
+$o->warn('Warning'); // yellow text
+$o->dim('Muted'); // dim text
+
+// custom style helper methods can be registered
+$o::register('blink', function ($text, $end = '\n') use (&$out) {
+	$out->styleBlink;
+	$out->echo($text, $end);
+});
+$o->bink('Blinking text'); // blinking text
+
+// override existing style helper methods
+$o::register('error', function ($text, $end = "\n") use (&$out) {
+	$out->colorRed; // text color red (instead of bg red)
+	$out->stderr($text, $end); // send to stderr
+});
+$o->error('Oops'); // red text
+```
+The output `grid()` method is a grid helper that will evenly space columns.
+```php
+$data = [
+	[1, "one"],
+	[2, "two"],
+	[100, "one hundred"],
+	[3, "three"],
+];
+
+$out->grid($data, ['indent' => 2]);
+```
+Above example would output:
+```
+  1      one
+  2      two
+  100    one hundred
+  3      three
+```
+
+### CLI Methods
+- `command(string $name, string $description, array $aliases = []): Command` - register a command
+- `header(callable $callback)` - register a header callback used int `help()` method
+- `help()` - display help (auto invoked by `Cli`)
+- `option(string $option, string $description, callable $action)` - set global option
+- `output()` - CLI `Output` helper object getter
+- `run()` - run CLI app
+
+### CLI Command Methods
+- `action($callbackOrClassArray): Command` - set command action
+- `arg(string $arg, string $description, array $options = []): Command` - set argument
+	- Options:
+		- `array` - argument with multiple values (must be last in arguments list)
+		- `default` - default value, like: `['default' => 'the value']`
+		- `optional` - argument is optional
+- `option(string $option, string $description = '', array $options = []): Command` -set option
+	- Options:
+		- `default` - default value, like: `['default' => 'the value']`
+
+### CLI Output Propeties
+- `bgBlack` - style background black
+- `bgBlue` - style background blue
+- `bgCyan` - style background cyan
+- `bgGray` - style background gray
+- `bgGreen` - style background green
+- `bgPurple` - style background purple
+- `bgRed` - style background red
+- `bgWhite` - style background white
+- `bgYellow` - style background yellow
+- `bgLigthBlue` - style background light blue
+- `bgLightCyan` - style background light cyan
+- `bgLightGray` - style background light gray
+- `bgLightGreen` - style background light green
+- `bgLightPurple` - style background light purple
+- `bgLightRed` - style background light red
+- `bgLightYellow` - style background light yellow
+- `colorBlack` - style color black
+- `colorBlue` - style color blue
+- `colorCyan` - style color cyan
+- `colorGray` - style color gray
+- `colorGreen` - style color green
+- `colorPurple` - style color purple
+- `colorRed` - style color red
+- `colorWhite` - style color white
+- `colorYellow` - style color yellow
+- `colorLigthBlue` - style color light blue
+- `colorLightCyan` - style color light cyan
+- `colorLightGray` - style color light gray
+- `colorLightGreen` - style color light green
+- `colorLightPurple` - style color light purple
+- `colorLightRed` - style color light red
+- `colorLightYellow` - style color light yellow
+- `styleBlink` - style blinking
+- `styleBold` - style bold
+- `styleDim` - style dim
+- `styleHidden` - style hidden
+- `styleInvert` - style invert
+- `styleUnderline` - style underline
+
+### CLI Output Methods
+- `dim(string $text, string $end = "\n"): Output` - print dim style text
+- `echo(string $text = '', string $end = "\n"): Output` - Print text to stdout
+- `error(string $text, string $end = "\n"): Output` - print error text
+- `grid(array $data, array $options = []): Output` - print grid
+	- Options:
+		- `indent` - number of spaces to indent
+		- `padding` - column padding (default: `4`)
+		- `style` - apply style to column, like `['style' => ['name' => 'colorBlue']]`
+- `info(string $text, string $end = "\n"): Output` - print info text
+- `ok(string $text, string $end = "\n"): Output` - print success text
+- `warn(string $text, string $end = "\n"): Output` - print warning text
+- `static register(string $name, callable $callback) ` - register style helper method
+- `stderr(string $text, string $end = "\n"): Output` - output to *stderr*
+- `stdout(string $text = '', string $end = "\n"): Output` - output to *stdout*
+- `styleIndent(int $number): Output` - indent style
 

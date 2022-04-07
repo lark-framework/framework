@@ -39,7 +39,7 @@ class SessionFlash extends \Lark\Factory\Singleton
 	/**
 	 * Init
 	 */
-	protected function __construct()
+	protected function __init()
 	{
 		$this->session = Session::getInstance();
 

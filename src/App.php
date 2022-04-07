@@ -84,14 +84,7 @@ class App extends \Lark\Factory\Singleton
 	 */
 	final public function run(): void
 	{
-		if (!self::isCli())
-		{
-			Router::getInstance()->dispatch();
-		}
-		else
-		{
-			#todo continue
-		}
+		Router::getInstance()->dispatch();
 	}
 
 	/**
