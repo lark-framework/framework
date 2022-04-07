@@ -34,6 +34,11 @@ Requirements:
   - Optional
 	- [curl](https://www.php.net/manual/en/book.curl.php) - if using `Lark\Http\Client`
 
+#### Composer Install
+```
+composer require lark/framework
+```
+
 ## Routing
 
 The router is used to dispatch route actions and middleware.
